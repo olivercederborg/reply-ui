@@ -104,9 +104,10 @@
     return e;
   }
   const label = (text) => (text ? h("div", "ru-k", text) : null);
-  // A positive number with optional thousands commas and a point decimal, then its unit.
-  // Anything else, such as "0,15" or a negative, gets no percent rather than a wrong one.
-  const parse = (s) => /^(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(?![\d.,])\s*(.*)$/.exec(s);
+  // A positive number with optional thousands commas and a point decimal, then a unit with
+  // no digits. Anything else, such as "0,15", "1 500", a range, or a negative, gets no
+  // percent rather than a wrong one.
+  const parse = (s) => /^(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(?![\d.,])\s*(\D*)$/.exec(s);
   function change(now, was) {
     const a = parse(now), b = parse(was), n = (m) => parseFloat(m[1].replace(/,/g, "") + (m[2] || ""));
     if (!a || !b || a[3] != b[3] || !n(b)) return null;
