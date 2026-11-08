@@ -30,7 +30,7 @@
   `.ru-key{flex:none;display:grid;place-items:center;width:22px;height:22px;border-radius:6px;background:${FILL};font:600 12px/1 var(--font-mono)}` +
   ".ru-rec{border-color:" + mix("accent", 55) + ";background:" + mix("accent", 7) + "}.ru-rec .ru-key{background:var(--accent);color:var(--accent-foreground)}" +
   ".ru-rec .ru-pill{margin-left:auto;color:var(--accent);background:" + mix("accent", 12) + "}" +
-  ".ru table{border-collapse:collapse;margin-inline:-8px;width:calc(100% + 16px)}.ru th{text-align:left;font-size:12px;font-weight:500;padding:0 12px 8px 8px}" +
+  ".ru-table{margin-inline:-8px;overflow-x:auto}.ru table{border-collapse:collapse;width:100%}.ru th{text-align:left;font-size:12px;font-weight:500;padding:0 12px 8px 8px}" +
   `.ru td{padding:8px 12px 8px 8px;border-top:1px solid ${mix("foreground", 6)};vertical-align:top}` +
   ".ru-pick td{background:" + mix("accent", 8) + ";font-weight:600}.ru-pick td:first-child{border-radius:6px 0 0 6px}.ru-pick td:last-child{border-radius:0 6px 6px 0}" +
   ".ru-pick td:first-child .ru-i{color:var(--accent);margin-right:6px;vertical-align:-2px}" +
@@ -104,10 +104,12 @@
     return e;
   }
   const label = (text) => (text ? h("div", "ru-k", text) : null);
-  const parse = (s) => /^(-?[\d.,]+)\s*(.*)$/.exec(s);
+  // A positive number with optional thousands commas and a point decimal, then its unit.
+  // Anything else, such as "0,15" or a negative, gets no percent rather than a wrong one.
+  const parse = (s) => /^(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?\s*(.*)$/.exec(s);
   function change(now, was) {
-    const a = parse(now), b = parse(was), n = (m) => parseFloat(m[1].replace(/,/g, ""));
-    if (!a || !b || a[2] != b[2] || !n(b)) return null;
+    const a = parse(now), b = parse(was), n = (m) => parseFloat(m[1].replace(/,/g, "") + (m[2] || ""));
+    if (!a || !b || a[3] != b[3] || !n(b)) return null;
     const p = Math.round(((n(a) - n(b)) / n(b)) * 100);
     return h("span", "ru-pill ru-num", [p ? icon(p < 0 ? "down" : "up") : null, Math.abs(p) + "%"]);
   }
@@ -137,8 +139,8 @@
     },
     decision: (b) => h("div", "", [label(b.question || "Next"), h("div", "ru-col", b.options.map((o) =>
       h("div", "ru-opt" + (o.rec ? " ru-rec" : ""), [h("span", "ru-key", o.key), h("span", "", o.text), o.rec ? h("span", "ru-pill", "Recommended") : null])))]),
-    table: (b) => h("div", "ru-table", h("table", "", [h("thead", "", h("tr", "", b.columns.map((c) => h("th", "", c)))),
-      h("tbody", "", b.rows.map((r, i) => h("tr", i === b.pick ? "ru-pick" : "", r.map((c, j) => h("td", "", [i === b.pick && !j ? icon("check") : null, String(c)])))))])),
+    table: (b) => h("div", "", h("div", "ru-table", h("table", "", [h("thead", "", h("tr", "", b.columns.map((c) => h("th", "", c)))),
+      h("tbody", "", b.rows.map((r, i) => h("tr", i === b.pick ? "ru-pick" : "", r.map((c, j) => h("td", "", [i === b.pick && !j ? icon("check") : null, String(c)])))))]))),
     checks: (b) => h("div", "ru-col", b.map((c) => h("div", "ru-check", [tone(icon(CHECK[c.status][0]), CHECK[c.status][1]), h("span", "", c.text)]))),
     flow(b) {
       const end = b.mark ?? b.steps.length - 1;
