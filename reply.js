@@ -131,7 +131,9 @@
       else if (!Array.isArray(data?.ui) || !data.ui.length) root.append(raw(data, 'payload needs a non-empty "ui" list'));
       else data.ui.forEach((b, i) => root.append(block(b, i)));
     }
-    src?.parentNode ? src.before(root) : document.body.append(root);
+    // A page with no <body> tag, once a host puts a <head> before it, has its scripts parsed
+    // into the head, which never shows: draw there only when the payload sits in the body.
+    document.body.contains(src) ? src.before(root) : document.body.append(root);
   }
   document.readyState == "loading" ? document.addEventListener("DOMContentLoaded", render) : render();
 })();
